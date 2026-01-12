@@ -47,15 +47,38 @@ maritime-segmentation/
 - Must handle maritime-specific challenges: water reflections, horizon ambiguity, small distant objects
 
 ## LaRS Dataset
-- Location: [specify path or download instructions]
-- Format: COCO-style annotations with RLE masks
-- Train/val/test splits predefined
+- Location: `~/datasets/lars` (symlinked to `data/lars`)
+- Format: COCO-style instance annotations
+- Annotations: `lars_v1.0.0_annotations/{split}/lars_{split}_instances_all.json`
+- Images: `lars_v1.0.0_images/{split}/images/`
+- Train: 2605 samples
 
 ## Commands
 ```bash
 uv sync                 # Install dependencies
 uv run python scripts/train.py --config configs/default.yaml
 uv run pytest           # Run tests
+```
+
+## Idun HPC Training
+Before training on Idun, prepare the dataset:
+```bash
+# 1. Upload LaRS dataset to Idun (or use existing location)
+# 2. Prepare RF-DETR format
+uv sync
+uv run python scripts/prepare_lars.py --lars-root /path/to/lars/on/idun
+
+# 3. Update SLURM script with your account
+#    Edit: scripts/train_idun.slurm
+#    - Set --account=your-account
+#    - Set --mail-user=your.email@ntnu.no
+
+# 4. Submit training job
+sbatch scripts/train_idun.slurm
+
+# 5. Monitor
+squeue -u $USER
+tail -f logs/slurm/<job_id>-rfdetr-lars.out
 ```
 
 ## Conventions
@@ -66,10 +89,9 @@ uv run pytest           # Run tests
 - Ruff for linting and formatting
 
 ## Current Status
-- [ ] Project setup
-- [ ] Dataset loading pipeline
-- [ ] RF-DETR-Seg baseline training
+- [x] Project setup
+- [x] Dataset loading pipeline
+- [x] RF-DETR-Seg baseline training (ready, needs CUDA GPU)
 - [ ] Evaluation on LaRS val set
 - [ ] ONNX export script
 - [ ] Jetson deployment (future)
-```

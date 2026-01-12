@@ -1,52 +1,44 @@
-# Maritime Segmentation Training Config
+# RF-DETR-Seg Training Config for LaRS Maritime Dataset
+# Fine-tuning best practices applied
 
 # Model
 model:
-  name: "rf-detr-seg"
-  backbone: "resnet50"
-  num_classes: 11  # LaRS classes
-  pretrained: true
+  name: "rf-detr-seg-preview"
 
 # Data
 data:
-  root: "data/lars"
-  input_size: 640
+  dataset_dir: "data/lars_rfdetr"  # RF-DETR format (prepared by scripts/prepare_lars.py)
+  input_size: 560  # Must be divisible by 56 for RF-DETR (560, 616, 672, etc.)
   batch_size: 4
   num_workers: 4
 
 # Training
 training:
   epochs: 50
-  lr: 1.0e-4
+  lr: 5.0e-5              # Lower LR for fine-tuning (was 1e-4)
+  lr_encoder: 7.5e-5      # Encoder LR = 1.5x base (RF-DETR default ratio)
   weight_decay: 1.0e-4
-  lr_scheduler: "cosine"
-  warmup_epochs: 5
+  grad_accum_steps: 4     # Effective batch size = 4 * 4 = 16
 
-# Optimizer
-optimizer:
-  name: "adamw"
-  betas: [0.9, 0.999]
+  # Warmup & scheduling
+  warmup_epochs: 2        # Stabilize early training
+  lr_drop: 40             # Drop LR at epoch 40
 
-# Augmentation
-augmentation:
-  horizontal_flip: true
-  scale_range: [0.8, 1.2]
-  brightness: 0.2
-  contrast: 0.2
+  # Regularization (important for small dataset)
+  drop_path: 0.1          # Stochastic depth regularization
 
-# Logging
-logging:
-  project: "maritime-segmentation"
-  log_every_n_steps: 50
-  save_every_n_epochs: 5
+  # Early stopping
+  early_stopping: true
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.001
 
 # Checkpoints
 checkpoints:
   dir: "checkpoints"
-  save_top_k: 3
-  monitor: "val/mAP"
+  save_every_n_epochs: 5
 
-# Hardware
-hardware:
-  accelerator: "auto"
-  precision: "16-mixed"
+# Logging
+logging:
+  project: "maritime-segmentation"
+  wandb: false
+  tensorboard: true
