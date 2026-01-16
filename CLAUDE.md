@@ -81,6 +81,29 @@ squeue -u $USER
 tail -f logs/slurm/<job_id>-rfdetr-lars.out
 ```
 
+## ONNX Export & Jetson Deployment
+After training, export the model for Jetson:
+```bash
+# Export to ONNX
+uv run python scripts/export_onnx.py \
+    --checkpoint checkpoints/best_ema.pt \
+    --input-size 640 \
+    --validate
+
+# Copy to Jetson
+scp checkpoints/best_ema.onnx mradmin@archytas:~/models/
+
+# On Jetson: convert to TensorRT
+trtexec --onnx=best_ema.onnx \
+        --saveEngine=rfdetr_seg.engine \
+        --fp16
+```
+
+Model size estimates:
+- RF-DETR-Seg: 34.2M params
+- FP16: ~70MB weights, ~1-2GB runtime memory
+- Target latency: <40ms at 640×640
+
 ## Conventions
 - Use uv for all package management (never pip install directly)
 - Use PyTorch Lightning or plain PyTorch (no TensorFlow)
@@ -93,5 +116,5 @@ tail -f logs/slurm/<job_id>-rfdetr-lars.out
 - [x] Dataset loading pipeline
 - [x] RF-DETR-Seg baseline training (ready, needs CUDA GPU)
 - [ ] Evaluation on LaRS val set
-- [ ] ONNX export script
+- [x] ONNX export script
 - [ ] Jetson deployment (future)
