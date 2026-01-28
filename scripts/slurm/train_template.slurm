@@ -20,7 +20,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:a100:1
 #SBATCH --time=12:00:00
 
 #------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ mkdir -p logs/slurm
 # Load required modules
 module purge
 module load Python/3.11.5-GCCcore-13.2.0
-module load CUDA/12.1.1
+module load CUDA/12.8.0
 
 # Print environment info
 echo ""
@@ -77,6 +77,19 @@ echo "=== Installing Dependencies ==="
 uv sync
 echo ""
 
+#------------------------------------------------------------------------------
+# PyTorch Distributed Setup (required even for single-GPU)
+#------------------------------------------------------------------------------
+export MASTER_ADDR=localhost
+
+# cuDNN workarounds for depthwise convolution compatibility
+export CUDNN_FRONTEND_ATTN_DP_WORKSPACE_LIMIT=0
+export TORCH_CUDNN_V8_API_ENABLED=0
+export MASTER_PORT=$((29500 + SLURM_JOB_ID % 1000))  # Unique port per job
+export WORLD_SIZE=1
+export RANK=0
+export LOCAL_RANK=0
+
 #==============================================================================
 # Training Configuration
 #==============================================================================
@@ -88,8 +101,8 @@ CONFIG="configs/default.yaml"
 
 # Training hyperparameters (override config if needed)
 EPOCHS=50
-BATCH_SIZE=8
-GRAD_ACCUM=2  # Effective batch size = 8 * 2 = 16
+BATCH_SIZE=2           # Reduced for memory (cuDNN disabled = higher memory usage)
+GRAD_ACCUM=8           # Effective batch size = 2 * 8 = 16
 
 #==============================================================================
 # Run Training

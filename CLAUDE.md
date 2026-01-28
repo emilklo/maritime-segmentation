@@ -29,12 +29,24 @@ RF-DETR-Seg fine-tuned on LaRS (Lakes, Rivers, Seas) maritime dataset.
 ```
 maritime-segmentation/
 ├── configs/           # Training configs, hyperparameters
+│   └── experiments/   # Experiment-specific configs
 ├── src/
 │   ├── models/        # Model definitions, custom layers
 │   ├── data/          # Dataset loaders, augmentations
-│   ├── training/      # Training loops, callbacks
+│   ├── training/      # Training loops, callbacks, registry
 │   └── export/        # ONNX conversion scripts
 ├── scripts/           # CLI scripts for train/eval/export
+│   ├── train.py       # Training entry point
+│   ├── prepare_lars.py # Data preparation
+│   ├── export_onnx.py # ONNX export
+│   ├── predict.py     # Inference
+│   ├── experiments/   # Experiment management
+│   │   ├── launch.py  # Launch via SLURM
+│   │   ├── status.py  # Check status
+│   │   └── compare.py # Compare & plot results
+│   └── slurm/         # SLURM templates
+│       ├── train_template.slurm
+│       └── predict.slurm
 ├── notebooks/         # Experimentation
 ├── deployment/        # Dockerfile, inference code (later)
 ├── checkpoints/       # Model weights (gitignored)
@@ -68,13 +80,15 @@ Before training on Idun, prepare the dataset:
 uv sync
 uv run python scripts/prepare_lars.py --lars-root /path/to/lars/on/idun
 
-# 3. Update SLURM script with your account
-#    Edit: scripts/train_idun.slurm
-#    - Set --account=your-account
-#    - Set --mail-user=your.email@ntnu.no
+# 3. Launch experiment with the experiment launcher
+uv run python scripts/experiments/launch.py \
+    --config configs/experiments/nano_baseline.yaml \
+    --account your-account \
+    --mail-user your.email@ntnu.no
 
-# 4. Submit training job
-sbatch scripts/train_idun.slurm
+# Or use the template directly:
+#    Edit: scripts/slurm/train_template.slurm
+sbatch scripts/slurm/train_template.slurm
 
 # 5. Monitor
 squeue -u $USER

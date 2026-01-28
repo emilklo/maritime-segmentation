@@ -1,0 +1,28 @@
+experiment:
+  name: "medium-lowlr"
+  description: "Medium model with lower learning rate"
+  model_size: "medium"
+
+data:
+  dataset_dir: "data/lars_rfdetr"
+
+training:
+  epochs: 60
+  lr: 5.0e-5
+  lr_encoder: 7.5e-5
+  warmup_epochs: 3
+  lr_scheduler: "cosine"
+  lr_drop: 100
+  lr_min_factor: 0.01
+  weight_decay: 1.0e-4
+  batch_size: 4
+  grad_accum_steps: 4
+  early_stopping: true
+  early_stopping_patience: 20
+
+checkpoints:
+  save_every_n_epochs: 5
+
+logging:
+  tensorboard: true
+  wandb: false

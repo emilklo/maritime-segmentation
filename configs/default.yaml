@@ -8,7 +8,7 @@ model:
 # Data
 data:
   dataset_dir: "data/lars_rfdetr"  # RF-DETR format (prepared by scripts/prepare_lars.py)
-  input_size: 560  # Must be divisible by 56 for RF-DETR (560, 616, 672, etc.)
+  input_size: 576  # Must be divisible by 24 for DINOv2 backbone (576 = 24*24)
   batch_size: 4
   num_workers: 4
 
@@ -25,7 +25,8 @@ training:
   lr_drop: 40             # Drop LR at epoch 40
 
   # Regularization (important for small dataset)
-  drop_path: 0.1          # Stochastic depth regularization
+  # NOTE: drop_path disabled - SegPreview backbone doesn't support dynamic updates
+  drop_path: 0.0          # Stochastic depth (disabled for SegPreview compatibility)
 
   # Early stopping
   early_stopping: true

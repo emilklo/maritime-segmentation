@@ -1,0 +1,51 @@
+# RF-DETR-Seg Training Config - Cosine LR Experiment
+# Changes from default.yaml:
+# - Cosine LR scheduler instead of step decay
+# - Larger early stopping patience (20 instead of 10)
+# - 60 epochs to allow longer training
+
+# Model
+model:
+  name: "rf-detr-seg-preview"
+
+# Data
+data:
+  dataset_dir: "data/lars_rfdetr"
+  input_size: 576  # Same as before
+  batch_size: 4
+  num_workers: 4
+
+# Training
+training:
+  epochs: 60
+  lr: 5.0e-5              # Same as before
+  lr_encoder: 7.5e-5      # Same as before
+  weight_decay: 1.0e-4
+  grad_accum_steps: 4     # Effective batch size = 16
+
+  # LR Schedule - COSINE
+  lr_scheduler: "cosine"  # Changed from step
+  lr_min_factor: 0.01     # Final LR = 1% of initial (5e-7)
+  warmup_epochs: 3        # Slightly longer warmup for stability
+
+  # Not used with cosine, but kept for compatibility
+  lr_drop: 100
+
+  # Regularization
+  drop_path: 0.0
+
+  # Early stopping - larger patience
+  early_stopping: true
+  early_stopping_patience: 20   # Increased from 10
+  early_stopping_min_delta: 0.001
+
+# Checkpoints
+checkpoints:
+  dir: "checkpoints"
+  save_every_n_epochs: 5
+
+# Logging
+logging:
+  project: "maritime-segmentation"
+  wandb: false
+  tensorboard: true
